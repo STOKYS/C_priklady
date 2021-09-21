@@ -1,0 +1,12 @@
+dodavatel;nazev_zbozi;hmotnost_v_gramech;pocet_kusu;cena
+OL;mleko_cerstve_1,5%;1069;6;19.90
+NV;nudle_polevkove;500;1;42.90
+KD;horcice_kremzska;400;1;12.90
+HS;tatra_maslo 82%;250;4;23.90
+UN;rama_maslova;250;2;24.90
+SD;tycinka_fit_stavnata;30;10;6.90
+OP;kaiserka_cerealni;60;8;2.90
+MV;cukr_krupice;1000;2;18.90
+MS;mouka_polohruba;1000;1;11.90
+MS;mouka_hruba;1000;1;11.90
+OP;chleb_rodinny;1200;2;24.90
