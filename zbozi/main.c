@@ -4,28 +4,28 @@
 
 #define VELIKOST 150
 #define VSTUP "zbozi.txt"
-#define VYSTUP "vystup.html"
+#define VYSTUP "vypis_zbozi.html"
 
 typedef struct{
     char dodavatel[5];
     char nazev[50];
-    char nazevcl[50];
     int hmotnost;
     int pocet;
     float cena;
 }ZBOZI;
 
-void removeunder(ZBOZI *produkt, int i){
-    char result[50] = "";
+void removeunder(ZBOZI *produkt,int pocet, char nazevcl[pocet][50]){
     char *buff;
     char name[50];
-    strcpy(name, produkt[i].nazev);
-    buff = strtok(name, "_");
-    while(buff!=NULL){
-        strcat(strcat(result, " "), buff);
-        buff = strtok(NULL, "\n_");
+    for (int i = 0; i < pocet; i++){
+        strcpy(nazevcl[i], "");
+        strcpy(name, produkt[i].nazev);
+        buff = strtok(name, "_");
+        while(buff!=NULL){
+            strcat(strcat(nazevcl[i], " "), buff);
+            buff = strtok(NULL, "\n_");
+        }
     }
-    strcpy(produkt[i].nazevcl, result);
 }
 
 int main() {
@@ -34,13 +34,13 @@ int main() {
     char text[VELIKOST];
     FILE *soubor = fopen(VSTUP, "r");
     ZBOZI *produkt = NULL;
-    if (soubor == NULL){
+    if (soubor == NULL) {
         printf("Soubor %s se nepodarilo otevrit", soubor);
     }
-    while(fgets(text, VELIKOST, soubor)!=NULL){
-        if (pocet > 0){
+    while (fgets(text, VELIKOST, soubor) != NULL) {
+        if (pocet > 0) {
             int rada = 0;
-            produkt = (ZBOZI*)realloc(produkt, pocet*sizeof(ZBOZI));
+            produkt = (ZBOZI *) realloc(produkt, pocet * sizeof(ZBOZI));
             token = strtok(text, "\n;");
             while (token != NULL) {
                 switch (rada) {
@@ -57,7 +57,7 @@ int main() {
                         produkt[pocet - 1].pocet = atoi(token);
                         break;
                     case 4:
-                        produkt[pocet - 1].cena = atoi(token);
+                        produkt[pocet - 1].cena = atof(token);
                         break;
                 }
                 token = strtok(NULL, "\n;");
@@ -66,42 +66,49 @@ int main() {
         }
         pocet++;
     }
-    if (fclose(soubor)==EOF){
+    pocet--;
+    if (fclose(soubor) == EOF) {
         printf("Soubor %s nebyl spravne zavren", soubor);
     }
     soubor = fopen(VYSTUP, "w");
-    if (soubor == NULL){
+    if (soubor == NULL) {
         printf("Soubor %s nebyl spravne otevren", soubor);
     }
-    printf("Dodavatel            Nazev Zbozi     Hmotnost  Kusu      Cena (1ks)     Cena Celkem\n");
+    printf("U C T E N K A\nDodavatel            Nazev Zbozi     Hmotnost  Kusu      Cena (1ks)     Cena Celkem\n");
     float cenacelkem = 0;
     int vaha = 0;
     float nejdrazsi[2] = {0, 0};
-    for (int i = 0; i < pocet - 1; i++){
-        removeunder(produkt, i);
-        printf("%9s %22s %10d g %5d %11.2f Kc %13.2f Kc\n", produkt[i].dodavatel, produkt[i].nazevcl, produkt[i].hmotnost, produkt[i].pocet, produkt[i].cena, (produkt[i].cena * produkt[i].pocet));
+    char nazevcl[pocet][50];
+    removeunder(produkt, pocet, nazevcl);
+    for (int i = 0; i < pocet; i++) {
+        printf("%9s %22s %10d g %5d %11.2f Kc %13.2f Kc\n", produkt[i].dodavatel, nazevcl[i],
+               produkt[i].hmotnost, produkt[i].pocet, produkt[i].cena, (produkt[i].cena * produkt[i].pocet));
         cenacelkem += (produkt[i].cena * produkt[i].pocet);
-        vaha += produkt[i].hmotnost;
-        if(nejdrazsi[0] < produkt[i].cena) {
+        vaha += produkt[i].hmotnost * produkt[i].pocet;
+        if (nejdrazsi[1] < produkt[i].cena) {
             nejdrazsi[0] = i;
             nejdrazsi[1] = produkt[i].cena;
         }
     }
-    printf("Cena celkem: %.2f\n", cenacelkem);
-    printf("Pocet polozek: %d\n", pocet);
-    printf("Celkova vaha je %dkg a %dg\n", vaha / 1000, vaha % 1000);
-    printf("Nejdrazsi produkt je %s za cenu: %.02f\n", produkt[(int)nejdrazsi[0]].nazev, produkt[(int)nejdrazsi[0]].cena);
-    fprintf(soubor,"<h1>Zbozi od externich dodavatelu</h1><table><tr><th>dodavatel</th><th>nazev</th><th>hmotnost v gramech</th><th>cena jednoho ks</th></tr>");
-    for (int i = 0; i < (pocet - 1); i++){
-        if (strcmp(produkt[i].dodavatel, "OP")!= 0){
-            fprintf(soubor, "<tr><td>%s</td><td>%s</td><td>%d</td><td>%.2f</td></tr>", produkt[i].dodavatel, produkt[i].nazevcl, produkt[i].hmotnost, produkt[i].cena);
+    printf("Cena celkem: %.2f Kc.\n", cenacelkem);
+    printf("Pocet polozek: %d.\n", pocet);
+    printf("Celkova vaha je %d kg a %d g.\n", vaha / 1000, vaha % 1000);
+    printf("Nejdrazsi produkt je %s za cenu: %.02f Kc.\n", nazevcl[(int)nejdrazsi[0]],
+           produkt[(int) nejdrazsi[0]].cena);
+    fprintf(soubor,
+            "<h1>Zbozi od externich dodavatelu</h1><table><tr><th>dodavatel</th><th>nazev</th><th>hmotnost v gramech</th><th>cena jednoho ks</th></tr>");
+    for (int i = 0; i < pocet; i++) {
+        if (strcmp(produkt[i].dodavatel, "OP") != 0) {
+            fprintf(soubor, "<tr><td>%s</td><td>%s</td><td>%d</td><td>%.2f</td></tr>", produkt[i].dodavatel,
+                    nazevcl[i], produkt[i].hmotnost, produkt[i].cena);
         }
     }
-    fprintf(soubor,"</table>");
-    if (fclose(soubor)==EOF){
+    fprintf(soubor, "</table>");
+    if (fclose(soubor) == EOF) {
         printf("Nepodarilo se ulozit HTML soubor");
+        return EXIT_FAILURE;
     } else {
-        printf("\nHTML soubor by vytvoren");
+        printf("\nByl vytvoren soubor %s.", VYSTUP);
+        return EXIT_SUCCESS;
     }
-    return 0;
 }

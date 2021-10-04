@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define VSTUP "knihy.txt"
-#define VYSTUP "vysledek.html"
+#define VYSTUP "vypis_knih.html"
 #define VELIKOST 150
 
 
@@ -15,14 +15,29 @@ typedef struct {
     int rok;
     int vaha;
     char isbn[50];
-    char isbnint[50]
 }KNIHA;
+
+void isbnconv(KNIHA*knihy, int pocet, char isbnint[pocet][20]){
+    char *tokentwo;
+    for (int i = 0; i < pocet; i++){
+        char buff[20] = "";
+        if (strlen(knihy[i].isbn) > 5){
+            tokentwo = strtok(knihy[i].isbn, "-");
+            while(tokentwo!=NULL) {
+                //strcat(isbnint[i], tokentwo);
+                sprintf(buff, "%s%s", buff, tokentwo);
+                tokentwo = strtok(NULL, "\n-");
+            }
+        }
+        strcpy(isbnint[i], buff);
+    }
+}
 
 void celkovavaha (int vaha, int zbytek){
     static int cvaha = 0;
     cvaha += vaha;
     if (!zbytek){
-        printf("Celkova vaha je %dkg a %dg\n", cvaha / 1000, cvaha % 1000);
+        printf("Celkova hmotnost knih je %d kg a %d g.\n", cvaha / 1000, cvaha % 1000);
     }
 }
 
@@ -34,7 +49,7 @@ void novakniha(KNIHA kniha, int zbytek){
         strcpy(nazev, kniha.jmeno);
     }
     if(!zbytek){
-        printf("Nejnovejsi kniha je %s, napsana roku %d\n", nazev, rok);
+        printf("Nejnovejsi kniha je %s vydana v roce %d.\n", nazev, rok);
     }
 }
 
@@ -49,7 +64,7 @@ void knihanebodvd (KNIHA kniha, int pocet, int i){
         dvd++;
     }
     if ((pocet-1)==(knih+dvd)){
-        printf("Knih je %d\nDVD je %d\n", knih, dvd);
+        printf("Pocet knih je %d.\nPocet dvd je %d.\n", knih, dvd);
     }
 }
 
@@ -96,6 +111,7 @@ int main() {
         }
         pocet++;
     }
+    pocet--;
     if (fclose(soubor)==EOF){
         printf("Soubor %s se nopodarilo uzavrit", VSTUP);
     }
@@ -103,33 +119,32 @@ int main() {
     if (soubor == NULL){
         printf("Soubor %s se nepodarilo otevrit", VYSTUP);
     }
-    printf("Celkovy pocet zaznamu je %d\n", pocet-1);
+    printf("Pocet zaznamu v souboru je %d.\n", pocet);
+    char isbnint[pocet][20];
+    isbnconv(knihy, pocet, isbnint);
     for (int i = 0; i < pocet; i++){
-        char isbnint[20] = "";
-        char *tokentwo;
-        if (strlen(knihy[i].isbn) > 5){
-            tokentwo = strtok(knihy[i].isbn, "-");
-            while(tokentwo!=NULL) {
-                strcat(isbnint, tokentwo);
-                tokentwo = strtok(NULL, "\n-");
-            }
-        }
-        strcpy(knihy[i].isbnint, isbnint);
         knihanebodvd(knihy[i], pocet, i);
     }
     fprintf(soubor, "<h1>Seznam knih s ISBN-10</h1><table><tr><th>cislo</th><th>nazev</th><th>nosic</th><th>rok vydani</th><th>hmotnost</th><th>ISBN</th></tr>");
-    for (int i = 0; i < (pocet-1); i++){
+    for (int i = 0; i < pocet; i++){
         if (strcmp(knihy[i].nosic, "DVD")!=0 && knihy[i].rok < 2007) {
-            fprintf(soubor, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%s</td></tr>", knihy[i].id, knihy[i].jmeno, knihy[i].nosic, knihy[i].rok, knihy[i].vaha, knihy[i].isbnint);
+            fprintf(soubor, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%d g</td><td>%s</td></tr>", knihy[i].id, knihy[i].jmeno, knihy[i].nosic, knihy[i].rok, knihy[i].vaha, isbnint[i]);
         }
     }
     fprintf(soubor,"</table>");
     fprintf(soubor, "<h1>Seznam knih s ISBN-13</h1><table><tr><th>cislo</th><th>nazev</th><th>nosic</th><th>rok vydani</th><th>hmotnost</th><th>ISBN</th></tr>");
-    for (int i = 0; i < (pocet - 1); i++){
+    for (int i = 0; i < pocet; i++){
         if (strcmp(knihy[i].nosic, "DVD")!=0 && knihy[i].rok >= 2007) {
-            fprintf(soubor, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%s</td></tr>", knihy[i].id, knihy[i].jmeno, knihy[i].nosic, knihy[i].rok, knihy[i].vaha, knihy[i].isbnint);
+            fprintf(soubor, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%d g</td><td>%s</td></tr>", knihy[i].id, knihy[i].jmeno, knihy[i].nosic, knihy[i].rok, knihy[i].vaha, isbnint[i]);
         }
     }
     fprintf(soubor, "</table>");
-    return 0;
+
+    if (fclose(soubor)==EOF){
+        printf("\nSoubor %s nebyl vytvoren\n",  VYSTUP);
+        return EXIT_FAILURE;
+    } else {
+        printf("\nByl vytvoren soubor %s.\n", VYSTUP);
+        return EXIT_SUCCESS;
+    }
 }
